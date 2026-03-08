@@ -5,6 +5,8 @@ from datetime import datetime
 base_url = "https://api.quavergame.com/v2"
 user_base_url = f"{base_url}/user"
 
+gamemode_format = {1: "4k", 2: "7k"}
+
 class User:
     def __init__(self, data):
         self.__name = data['username']
@@ -123,13 +125,9 @@ def GetRecentPlayed(id: int, mode: int) -> Record:
         
     return
 
-def GamemodeFormat(gamemode: int) -> str:
-    if(gamemode == 2):
-        return '7k'
-    return '4k'
 
 def CreateUserEmbed(user: User) -> discord.Embed:
-    embed = discord.Embed(title=user.name, url=f"https://quavergame.com/user/{user.id}", description=f"預設模式: {GamemodeFormat(user.default_mode)}", color=0x00f7ff)
+    embed = discord.Embed(title=user.name, url=f"https://quavergame.com/user/{user.id}", description=f"預設模式: {gamemode_format[user.default_mode]}", color=0x00f7ff)
     embed.set_thumbnail(url=user.avatar_url)
 
     embed.add_field(name="4K",
@@ -162,11 +160,11 @@ def CreateUserEmbed(user: User) -> discord.Embed:
 def CreateRecordEmbed(record: Record, discord_avatar: str):
     user = GetUser(record.user_id)
 
-    embed = discord.Embed(title=f"{record.map['artist']} - {record.map_name}", url=record.map_url, color=(0xff0000 if(record.failed) else 0x00ff00))
+    embed = discord.Embed(title=f"{record.map['artist']} - {record.map_name} [{gamemode_format[record.map['game_mode']]}]", url=record.map_url, color=(0xff0000 if(record.failed) else 0x00ff00), description=f"初始難度: {round(record.map['difficulty_rating'], 2)}")
     embed.set_image(url=record.map_thumbnail)
     embed.set_thumbnail(url=user.avatar_url)
     embed.set_footer(text=f"{user.name} {record.date.strftime('%Y-%m-%d %H:%M:%S')}", icon_url=discord_avatar)
-    embed.set_author(name=round(record.rate, 2), icon_url=f"https://static.quavergame.com/img/grades/{record.grade}.png")
+    embed.set_author(name=f"rating: {round(record.rate, 2)}", icon_url=f"https://static.quavergame.com/img/grades/{record.grade}.png")
 
     embed.add_field(name="Score", value=record.total_score, inline=True)
     embed.add_field(name="Accuracy", value=f"{round(record.accuracy, 2)}%", inline=True)
